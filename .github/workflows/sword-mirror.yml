@@ -1,0 +1,35 @@
+name: CrossWire SWORD Project Mirror
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  SVN_REPO: http://crosswire.org/svn/sword
+  GIT_URL: https://${{ secrets.GH_ACCESS_TOKEN }}@github.com/clive-project/sword-mirror.git
+  PKGS: "git-core git-svn ruby"
+  GEMS: svn2git
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+  steps:
+  - uses: actions/checkout@v2
+
+  - name: Install dependencies
+    run: |
+      apt-get update
+      apt-get install -y ${{ env.PKGS }}
+      gem install ${{ env.GEMS }}
+  
+  - name: Sync SVN to Git
+    run: |
+      mkdir repo && cd repo
+      svn2git ${{ env.SVN_REPO }}
+      git remote add origin ${{ env.GIT_URL }}
+      git push --all
+      git push --tags
